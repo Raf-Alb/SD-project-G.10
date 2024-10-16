@@ -56,7 +56,7 @@ pygame.mixer.music.load('background.mid')
 # Set up images.
 playerImage = pygame.image.load('player.png')
 playerRect = playerImage.get_rect()
-baddieImage = pygame.image.load('baddie.png')
+baddieImage = pygame.image.load('BBC SAILLON 6.png')
 
 # Show the "Start" screen.
 windowSurface.fill(BACKGROUNDCOLOR)
@@ -195,4 +195,3 @@ while True:
     waitForPlayerToPressKey()
 
     gameOverSound.stop()
-
