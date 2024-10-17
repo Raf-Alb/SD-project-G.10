@@ -9,11 +9,11 @@ WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # Charger l'image du fond
-background = pygame.image.load('https://vscode.dev/github/Raf-Alb/SD-project-G.10/blob/main/Fond%20jeu.png').convert()
+background = pygame.image.load('Fond jeu.png').convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
 # Charger l'image du player
-player = pygame.image.load('https://vscode.dev/github/Raf-Alb/SD-project-G.10/blob/main/penis.png').convert_alpha()  # convert_alpha() pour conserver la transparence
+player = pygame.image.load('penis.png').convert_alpha()  # convert_alpha() pour conserver la transparence
 # Redimensionner le player (par exemple à 50x50 pixels)
 player_width = 70  # Nouvelle largeur
 player_height = 70  # Nouvelle hauteur
@@ -50,12 +50,12 @@ while True:
     # Déplacer le player à droite et à gauche (avec A & B)
     if keys[pygame.K_a]:
         player_x -= player_speed
-    if keys[pygame.k_b]:
+    if keys[pygame.K_b]:
         player_x += player_speed
 
     # Empêcher le joueur de sortir de l'écran
     if player_x < 0:  # Ne pas aller à gauche en dehors de l'écran
-        player_x = 0
+        break 
     if player_x > WIDTH - player_width:  # Ne pas dépasser la droite de l'écran
         player_x = WIDTH - player_width
 
