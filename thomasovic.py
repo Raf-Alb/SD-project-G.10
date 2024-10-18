@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 # Initialiser Pygame
 pygame.init()
@@ -13,54 +14,77 @@ background = pygame.image.load('Fond jeu.png').convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
 # Charger l'image du player
-player = pygame.image.load('penis.png').convert_alpha()  # Assure-toi d'avoir la bonne image
+player = pygame.image.load('penis.png').convert_alpha()
 # Redimensionner le player 
-player_width = 60  # Nouvelle largeur
-player_height = 60  # Nouvelle hauteur
+player_width = 60
+player_height = 60
 player = pygame.transform.scale(player, (player_width, player_height))
 
+# Charger l'image de l'obstacle (stone)
+stone_image = pygame.image.load('stone.png').convert_alpha()
+
 # Position initiale du joueur
-player_x = 100  # Position horizontale du joueur
+player_x = 100
+player_y = 450
 
-# Définir la gravité et la position du sol
+# Niveau du sol
+floor = 450
+
+# Définir la gravité et la vitesse
 default_gravity = 1
-gravity = default_gravity  # gravité (accélération vers le bas)
-floor = 450  # position du sol en y (doit correspondre à la position Y du sol)
-
-# Définir la vitesse du joueur et du défilement
-player_speed = 5  # Vitesse du joueur (horizontal)
+gravity = default_gravity
+player_speed = 5
 scroll_speed = 2  # Vitesse de défilement du fond
 
 # Initialiser les positions des images de fond
-bg_x1 = 0  # Position initiale du premier fond
-bg_x2 = background.get_width()  # Position initiale du deuxième fond, à droite du premier
+bg_x1 = 0
+bg_x2 = background.get_width()
 
-class Player():  # Adaptons la logique de la classe Frog pour le joueur
+class Player:
     def __init__(self):
-        self.y = floor  # La position verticale initiale du joueur est sur le sol
-        self.y_speed = 0  # vitesse verticale
-        self.jumping = 0  # état du saut
+        self.y = floor
+        self.y_speed = 0
+        self.jumping = 0
 
     def jump(self):
-        if self.jumping == 0:  # Saut initial (grand saut)
-            self.y_speed = -20  # un grand saut (vers le haut, donc valeur négative)
-            self.jumping = 1  # changer l'état du saut
-        elif self.jumping == 1 and self.y_speed >= 0:  # Deuxième (plus grand saut)
-            self.y_speed = -15  # un petit saut (valeur négative pour monter)
-            self.jumping = 2  # changer l'état du saut
-        elif self.jumping ==2 and self.y_speed >= 0 :# Troisième saut ( plus petit saut)
+        if self.jumping == 0:
+            self.y_speed = -20
+            self.jumping = 1
+        elif self.jumping == 1 and self.y_speed >= 0:
             self.y_speed = -15
-            self.jumping = 3 
+            self.jumping = 2
+        elif self.jumping == 2 and self.y_speed >= 0:
+            self.y_speed = -15
+            self.jumping = 3
 
     def update(self):
-        self.y_speed += gravity  # Appliquer la gravité (ralentit la montée, accélère la chute)
-        self.y = min(self.y + self.y_speed, floor)  # Ne pas tomber sous le sol
-        if self.y == floor:  # Le joueur touche le sol
-            self.jumping = 0  # Réinitialiser l'état de saut
-            self.y_speed = 0  # Réinitialiser la vitesse verticale
+        self.y_speed += gravity
+        self.y = min(self.y + self.y_speed, floor)
+        if self.y == floor:
+            self.jumping = 0
+            self.y_speed = 0
 
 # Créer une instance du joueur
 player_instance = Player()
+
+# Fonction pour créer un stone avec une taille et une position aléatoires
+def create_stone():
+    stone_width = random.randint(40, 100)
+    stone_height = stone_width
+    stone_x = random.randint(WIDTH, WIDTH + 300)
+    stone_y = floor 
+    stone = pygame.transform.scale(stone_image, (stone_width, stone_height))
+    return {"image": stone, "x": stone_x, "y": stone_y, "width": stone_width, "height": stone_height}
+
+# Créer plusieurs stones
+stones = [create_stone() for _ in range(3)]
+
+# Fonction de détection de collision
+def detect_collision(player_x, player_y, player_width, player_height, stone):
+    return (player_x < stone["x"] + stone["width"] and
+            player_x + player_width > stone["x"] and
+            player_y < stone["y"] + stone["height"] and
+            player_y + player_height > stone["y"])
 
 # Boucle principale du jeu
 while True:
@@ -72,66 +96,63 @@ while True:
     # Capturer les touches pressées
     keys = pygame.key.get_pressed()
 
-    # Déplacer le player à droite et à gauche (avec flèche)
-    if keys[pygame.K_LEFT]:  # Si flèche gauche est pressée
+    # Déplacer le player à droite et à gauche
+    if keys[pygame.K_LEFT]:
         player_x -= player_speed
-    if keys[pygame.K_RIGHT]:  # Si flèche droite est pressée
-        player_x += player_speed
-
-    # Déplacer le player à droite et à gauche (avec A & D)
-    if keys[pygame.K_a]:  # Si flèche gauche est pressée
-        player_x -= player_speed
-    if keys[pygame.K_d]:  # Si flèche droite est pressée
+    if keys[pygame.K_RIGHT]:
         player_x += player_speed
 
     # Sauter avec la touche espace 
     if keys[pygame.K_SPACE]:
-        player_instance.jump()  # Appeler la méthode de saut
-     # Sauter avec la touche W
-    if keys[pygame.K_w]:
         player_instance.jump()
-     # Sauter avec la flèche du haut 
-    if keys[pygame.K_UP]:
-        player_instance.jump()  # Appeler la méthode de saut 
 
+    # Redescendre plus vite d'un saut
+    if keys[pygame.K_DOWN]:
+        gravity = 3
+    else:
+        gravity = default_gravity
 
     # Mettre à jour la position verticale avec la physique du saut
     player_instance.update()
 
-    # Redescendre plus vite d'un saut avec flèche
-    if keys[pygame.K_DOWN]:
-        gravity = 3
-    else : 
-        gravity = default_gravity
-    # Redescendre plus vite d'un saut avec S
-    if keys[pygame.K_s]:
-        gravity = 3
-    else : 
-        gravity = default_gravity
-        
-
     # Empêcher le joueur de sortir de l'écran
-    if player_x < 0:  # Ne pas aller à gauche en dehors de l'écran
-        break 
-    if player_x > WIDTH - player_width:  # Ne pas dépasser la droite de l'écran
+    if player_x < 0:
+        player_x = 0
+    if player_x > WIDTH - player_width:
         player_x = WIDTH - player_width
 
     # Mettre à jour la position des deux images de fond
-    bg_x1 -= scroll_speed  # Déplacer la première image de fond vers la gauche
-    bg_x2 -= scroll_speed  # Déplacer la deuxième image de fond vers la gauche
+    bg_x1 -= scroll_speed
+    bg_x2 -= scroll_speed
 
-    # Si l'une des images sort de l'écran, la replacer à droite de l'autre
     if bg_x1 <= -background.get_width():
         bg_x1 = bg_x2 + background.get_width()
     if bg_x2 <= -background.get_width():
         bg_x2 = bg_x1 + background.get_width()
 
-    # DESSINER LE FOND D'ABORD
+    # Faire défiler les stones
+    for stone in stones:
+        stone["x"] -= scroll_speed  # Faire défiler les stones avec le fond
+
+        # Réinitialiser la position de la pierre lorsqu'elle sort de l'écran
+        if stone["x"] + stone["width"] < 0:
+            new_stone = create_stone()
+            stone.update(new_stone)
+
+        # Vérifier la collision avec le joueur
+        if detect_collision(player_x, player_instance.y, player_width, player_height, stone):
+            player_x -= 5  # Si collision, pousser le joueur vers la gauche
+
+    # DESSINER LE FOND
     screen.blit(background, (bg_x1, 0))
     screen.blit(background, (bg_x2, 0))
 
-    # DESSINER LE PLAYER ENSUITE (PAR-DESSUS LE FOND)
-    screen.blit(player, (player_x, player_instance.y))  # Utiliser la position y du saut
+    # DESSINER LE PLAYER
+    screen.blit(player, (player_x, player_instance.y))
+
+    # DESSINER LES STONES
+    for stone in stones:
+        screen.blit(stone["image"], (stone["x"], stone["y"]))
 
     # Mettre à jour l'affichage
     pygame.display.flip()
