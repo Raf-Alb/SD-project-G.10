@@ -23,7 +23,8 @@ player = pygame.transform.scale(player, (player_width, player_height))
 player_x = 100  # Position horizontale du joueur
 
 # Définir la gravité et la position du sol
-gravity = 1  # gravité (accélération vers le bas)
+default_gravity = 1
+gravity = default_gravity  # gravité (accélération vers le bas)
 floor = 450  # position du sol en y (doit correspondre à la position Y du sol)
 
 # Définir la vitesse du joueur et du défilement
@@ -77,12 +78,37 @@ while True:
     if keys[pygame.K_RIGHT]:  # Si flèche droite est pressée
         player_x += player_speed
 
-    # Sauter avec la touche espace (utiliser la logique de saut de la classe)
+    # Déplacer le player à droite et à gauche (avec A & D)
+    if keys[pygame.K_a]:  # Si flèche gauche est pressée
+        player_x -= player_speed
+    if keys[pygame.K_d]:  # Si flèche droite est pressée
+        player_x += player_speed
+
+    # Sauter avec la touche espace 
     if keys[pygame.K_SPACE]:
         player_instance.jump()  # Appeler la méthode de saut
+     # Sauter avec la touche W
+    if keys[pygame.K_w]:
+        player_instance.jump()
+     # Sauter avec la flèche du haut 
+    if keys[pygame.K_UP]:
+        player_instance.jump()  # Appeler la méthode de saut 
+
 
     # Mettre à jour la position verticale avec la physique du saut
     player_instance.update()
+
+    # Redescendre plus vite d'un saut avec flèche
+    if keys[pygame.K_DOWN]:
+        gravity = 3
+    else : 
+        gravity = default_gravity
+    # Redescendre plus vite d'un saut avec S
+    if keys[pygame.K_s]:
+        gravity = 3
+    else : 
+        gravity = default_gravity
+        
 
     # Empêcher le joueur de sortir de l'écran
     if player_x < 0:  # Ne pas aller à gauche en dehors de l'écran
