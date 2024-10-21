@@ -141,7 +141,8 @@ while True:
 
         # Vérifier la collision avec le joueur
         if detect_collision(player_x, player_instance.y, player_width, player_height, stone):
-            player_x -= 5  # Si collision, pousser le joueur vers la gauche
+            print("Collision détectée! Fin du jeu.")
+            pygame.quit()  # Fermer Pygame
 
     # DESSINER LE FOND
     screen.blit(background, (bg_x1, 0))
