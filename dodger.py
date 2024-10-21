@@ -54,9 +54,12 @@ gameOverSound = pygame.mixer.Sound('gameover.wav')
 pygame.mixer.music.load('background.mid')
 
 # Set up images.
-playerImage = pygame.image.load('player.png')
+playerImage = pygame.image.load('penis.png')
 playerRect = playerImage.get_rect()
 baddieImage = pygame.image.load('BBC SAILLON 6.png')
+player_width = 60
+player_height = 60
+player = pygame.transform.scale(player, (player_width, player_height))
 
 # Show the "Start" screen.
 windowSurface.fill(BACKGROUNDCOLOR)
