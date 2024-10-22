@@ -68,18 +68,18 @@ class Player:
 player_instance = Player()
 
 # Fonction pour créer un stone avec une taille et une position aléatoires
-def create_stone(stones):
+def create_stone(stones, min_distance = 600):
     while True:
         stone_width = random.randint(40, 100)
         stone_height = stone_width
-        stone_x = random.randint(WIDTH, WIDTH + 300)
+        stone_x = random.randint(WIDTH, WIDTH + 800)
         stone_y = floor 
         stone = pygame.transform.scale(stone_image, (stone_width, stone_height))
      
         # Vérifier que la nouvelle pierre n'est pas trop proche des autres
         too_close = False
         for other_stone in stones:
-            if abs(stone_x - other_stone["x"]) < (stone_width + other_stone["width"]) / 2:
+            if abs(stone_x - other_stone["x"]) < min_distance:
                 too_close = True
                 break        
         if not too_close:  # Si la pierre n'est pas trop proche des autres, on l'accepte
@@ -88,7 +88,7 @@ def create_stone(stones):
 # Créer plusieurs stones
 stones = []
 for _ in range(3):
-    stones.append(create_stone(stones))  # Passer la liste des stones existants ici
+    stones.append(create_stone(stones, min_distance=600))  # Passer la liste des stones existants ici
 
 # Fonction de détection de collision
 def detect_collision(player_x, player_y, player_width, player_height, stone):
@@ -147,7 +147,7 @@ while True:
 
         # Réinitialiser la position de la pierre lorsqu'elle sort de l'écran
         if stone["x"] + stone["width"] < 0:
-            new_stone = create_stone(stones)
+            new_stone = create_stone(stones, min_distance=600)
             stone["x"] = new_stone["x"]
             stone["width"] = new_stone["width"]
             stone["image"] = new_stone["image"]
@@ -155,10 +155,19 @@ while True:
             stone["height"] = new_stone["height"]
 
         # Vérifier la collision avec le joueur
-        if detect_collision(player_x, player_instance.y, player_width, player_height, stone):
-            print("Collision détectée! Fin du jeu.")
-            pygame.quit()  # Fermer Pygame
-
+    if detect_collision(player_x, player_instance.y, player_width, player_height, stone):
+        print("Collision détectée! Game Over.")
+    
+    # Option pour afficher un message de Game Over
+        font = pygame.font.Font(None, 74)
+        text = font.render("Game Over", True, (255, 0, 0))
+        screen.blit(text, (WIDTH // 2 - 150, HEIGHT // 2 - 50))
+        pygame.display.flip()
+    
+    # Attendre 2 secondes avant de quitter
+        pygame.time.wait(2000)
+        pygame.quit()  # Fermer Pygame après une pause
+        sys.exit()  # Quitter proprement
     # DESSINER LE FOND
     screen.blit(background, (bg_x1, 0))
     screen.blit(background, (bg_x2, 0))
