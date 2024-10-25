@@ -2,7 +2,7 @@
 import pygame
 import sys
 from player import Player
-from stone import create_stone, detect_collision
+from stone import create_stones, detect_collision
 from background import update_background
 
 # Initialiser Pygame
@@ -15,31 +15,28 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # Charger les images
 background = pygame.image.load('Fond jeu.png').convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-player_image = pygame.image.load('player.png').convert_alpha()
-player_image = pygame.transform.scale(player_image, (60, 60))
 stone_image = pygame.image.load('stone.png').convert_alpha()
 
 # Position initiale du joueur
 player_x = 100
-player_y = 450
+player_y = 430
 player_width = 60
 player_height = 60
-floor = 450
+floor = 430 
 scroll_speed = 2
 gravity = 1
 default_gravity = gravity
+
 
 # Initialiser les positions du fond
 bg_x1 = 0
 bg_x2 = background.get_width()
 
-# Créer une instance du joueur
-player_instance = Player(floor, gravity)
+# Créer une instance du joueur avec le dossier des frames
+player_instance = Player(floor, gravity, image_folder = "player_frames")
 
-# Créer les obstacles
-stones = []
-for _ in range(3):
-    stones.append(create_stone(stone_image, WIDTH, floor))
+# Créer les obstacles pierres avec une distance minimale de 200 pixels entre elles
+stones = create_stones(stone_image, WIDTH, floor, num_stones=3, min_distance=200)
 
 # Boucle principale du jeu
 while True:
@@ -68,7 +65,7 @@ while True:
         gravity = default_gravity
     player_instance.gravity = gravity
 
-    # Mettre à jour le joueur
+    # Mettre à jour le joueur (position + animation)
     player_instance.update()
 
     # Empêcher le joueur de sortir de l'écran
@@ -81,8 +78,8 @@ while True:
     for stone in stones:
         stone["x"] -= scroll_speed
         if stone["x"] + stone["width"] < 0:
-            new_stone = create_stone(stone_image, WIDTH, floor)
-            stone.update(new_stone)
+            # Réinitialiser la pierre qui sort de l'écran en la mettant après la dernière pierre visible
+            stone["x"] = max([s["x"] for s in stones]) + stone["width"] + 200  # Espacement de 200 pixels
 
         # Vérifier la collision
         if detect_collision(player_x, player_instance.y, player_width, player_height, stone):
@@ -91,7 +88,7 @@ while True:
     # Affichage
     screen.blit(background, (bg_x1, 0))
     screen.blit(background, (bg_x2, 0))
-    screen.blit(player_image, (player_x, player_instance.y))
+    player_instance.draw(screen, player_x)  # Dessiner le joueur avec l'animation
     for stone in stones:
         screen.blit(stone["image"], (stone["x"], stone["y"]))
 
