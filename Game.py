@@ -18,6 +18,47 @@ background = pygame.image.load('Fond jeu.png').convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 stone_image = pygame.image.load('stone.png').convert_alpha()
 
+# Police pour l'écran d'accueil
+font_large = pygame.font.SysFont("courier new", 62)
+font_score = pygame.font.SysFont("arial", 36)
+TEXTCOLOR = (225, 225, 225)  # Blanc
+
+# Fonction pour quitter proprement
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+# Fonction pour attendre une action de l'utilisateur
+def waitForPlayerToPressKey():
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return
+
+# Fonction pour afficher l'écran de démarrage            
+def show_start_screen():
+    screen.fill((0, 100, 25))  # Fond vert
+    text_surface1 = font_large.render("Bee Running", True, TEXTCOLOR)
+    text_surface2 = font_large.render("Press a key to start", True, TEXTCOLOR)
+    text_rect1 = text_surface1.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+    text_rect2 = text_surface2.get_rect(center=(WIDTH // 2, HEIGHT // 3 + 50))
+    screen.blit(text_surface1, text_rect1)
+    screen.blit(text_surface2, text_rect2)
+    pygame.display.update()
+    waitForPlayerToPressKey()
+
+
+# Fonction pour afficher du texte (score) sur l'écran
+def draw_text(surface, text, font, color, x, y):
+    text_obj = font.render(text, True, color)
+    text_rect = text_obj.get_rect(topleft=(x, y))
+    surface.blit(text_obj, text_rect)
+
+# Afficher l'écran de démarrage
+show_start_screen()
+
 # Positions de sol pour le joueur et les pierres
 player_floor = 510  # Sol visuel pour le joueur (ajusté pour marcher sur la terre)
 stone_floor = 500   # Sol pour les pierres
@@ -27,6 +68,11 @@ player_x = 100
 scroll_speed = 2
 gravity = 1
 default_gravity = gravity
+
+# Initialiser le score
+score = 0
+top_score = 0 
+score_increment = 1 # Points ajoutés à chaque cycle de jeu
 
 # Créer une instance du joueur
 player_instance = Player(player_floor, gravity, image_folder="player_frames")
@@ -112,8 +158,18 @@ while running:
     # Dessiner le joueur avec l'animation
     player_instance.draw(screen, player_x)
 
+    # Afficher le score et le top score **APRÈS** tous les éléments visuels
+    draw_text(screen, f"Score: {score}", font_score, TEXTCOLOR, 10, 10)
+    draw_text(screen, f"Top Score: {top_score}", font_score, TEXTCOLOR, 10, 50)
+    
     # Mettre à jour l'affichage
     pygame.display.flip()
     pygame.time.Clock().tick(60)
 
+    # Mettre à jour le score
+    score += score_increment * scroll_speed
+
+# Mettre à jour le top score si nécessaire
+if score > top_score:
+    top_score = score
 
