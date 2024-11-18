@@ -20,21 +20,6 @@ background = pygame.image.load('Fond jeu.png').convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 stone_image = pygame.image.load('stone.png').convert_alpha()
 
-# Charger les frames pour l'animation de Game Over
-gameover_frames = []
-gameover_folder = "gameover_frames"
-frame_scale_factor = 0.3
-for filename in sorted(os.listdir(gameover_folder)):
-    if filename.endswith(".png"):
-        frame = pygame.image.load(os.path.join(gameover_folder, filename)).convert_alpha()
-        # Redimensionner en utilisant un facteur
-        frame_width = int(WIDTH * frame_scale_factor)
-        frame_height = int(HEIGHT * frame_scale_factor)
-        frame = pygame.transform.scale(frame, (frame_width, frame_height))
-        
-        # Centrer l'image redimensionnée
-        gameover_frames.append(frame)
-
 # Police pour l'écran
 font_large = pygame.font.SysFont("courier new", 62)
 font_score = pygame.font.SysFont("arial", 36)
@@ -62,15 +47,22 @@ def draw_text(surface, text, font, color, x, y):
 
 # Fonction pour afficher l'écran de démarrage
 def show_start_screen():
-    screen.fill((0, 100, 25))  # Fond vert
-    text_surface1 = font_large.render("Bee Running", True, TEXTCOLOR)
-    text_surface2 = font_large.render("Press a key to start", True, TEXTCOLOR)
+    # Afficher l'image de fond du jeu
+    screen.blit(background, (0, 0))  # Affiche le fond à la position (0, 0)
+
+    # Texte "Bee Running"
+    text_surface1 = font_large.render("Bee Running", True, (0, 40, 0))
+    text_surface2 = font_large.render("Press a key to start", True, (0, 40, 0))
     text_rect1 = text_surface1.get_rect(center=(WIDTH // 2, HEIGHT // 3))
     text_rect2 = text_surface2.get_rect(center=(WIDTH // 2, HEIGHT // 3 + 50))
+
+    # Afficher les textes sur l'écran
     screen.blit(text_surface1, text_rect1)
     screen.blit(text_surface2, text_rect2)
-    pygame.display.update()
-    waitForPlayerToPressKey()
+
+    pygame.display.update()  # Mettre à jour l'affichage
+    waitForPlayerToPressKey()  # Attendre une action de l'utilisateur
+
 
 # Fonction pour afficher l'écran Game Over avec animation
 def show_game_over_screen(score, top_score):
