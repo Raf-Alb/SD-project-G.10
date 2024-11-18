@@ -1,10 +1,11 @@
 # Game.py
 import pygame
 import sys
+import os
 from player import Player
 from stone import create_stones, detect_collision
 from background import update_background
-from bee import create_bees, update_bee, draw_bee  # Importer les fonctions pour gérer les abeilles
+from bee import create_bees, update_bee, draw_bee
 
 # Initialiser Pygame
 pygame.init()
@@ -12,13 +13,29 @@ pygame.init()
 # Taille de la fenêtre
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Bee Running")
 
-# Charger les images
+# Charger les ressources
 background = pygame.image.load('Fond jeu.png').convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 stone_image = pygame.image.load('stone.png').convert_alpha()
 
-# Police pour l'écran d'accueil
+# Charger les frames pour l'animation de Game Over
+gameover_frames = []
+gameover_folder = "gameover_frames"
+frame_scale_factor = 0.3
+for filename in sorted(os.listdir(gameover_folder)):
+    if filename.endswith(".png"):
+        frame = pygame.image.load(os.path.join(gameover_folder, filename)).convert_alpha()
+        # Redimensionner en utilisant un facteur
+        frame_width = int(WIDTH * frame_scale_factor)
+        frame_height = int(HEIGHT * frame_scale_factor)
+        frame = pygame.transform.scale(frame, (frame_width, frame_height))
+        
+        # Centrer l'image redimensionnée
+        gameover_frames.append(frame)
+
+# Police pour l'écran
 font_large = pygame.font.SysFont("courier new", 62)
 font_score = pygame.font.SysFont("arial", 36)
 TEXTCOLOR = (225, 225, 225)  # Blanc
@@ -37,7 +54,13 @@ def waitForPlayerToPressKey():
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return
 
-# Fonction pour afficher l'écran de démarrage            
+# Fonction pour afficher du texte (score) sur l'écran
+def draw_text(surface, text, font, color, x, y):
+    text_obj = font.render(text, True, color)
+    text_rect = text_obj.get_rect(topleft=(x, y))
+    surface.blit(text_obj, text_rect)
+
+# Fonction pour afficher l'écran de démarrage
 def show_start_screen():
     screen.fill((0, 100, 25))  # Fond vert
     text_surface1 = font_large.render("Bee Running", True, TEXTCOLOR)
@@ -49,127 +72,135 @@ def show_start_screen():
     pygame.display.update()
     waitForPlayerToPressKey()
 
+# Fonction pour afficher l'écran Game Over avec animation
+def show_game_over_screen(score, top_score):
+    # Texte "GAME OVER" en haut
+    game_over_text = font_large.render("GAME OVER", True, (255, 0, 0))
+    game_over_rect = game_over_text.get_rect(center=(WIDTH // 2, HEIGHT // 4))  # Position plus haute
 
-# Fonction pour afficher du texte (score) sur l'écran
-def draw_text(surface, text, font, color, x, y):
-    text_obj = font.render(text, True, color)
-    text_rect = text_obj.get_rect(topleft=(x, y))
-    surface.blit(text_obj, text_rect)
+    # Texte du score
+    score_text = font_score.render(f"Score: {score}", True, (255, 255, 255))
+    score_rect = score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))  # Score centré
+
+    # Texte du top score
+    top_score_text = font_score.render(f"Top Score: {top_score}", True, (255, 255, 255))
+    top_score_rect = top_score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+
+    # Texte des instructions pour redémarrer
+    restart_text = font_score.render("Press any key to restart", True, (200, 200, 200))
+    restart_rect = restart_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+
+    # Dessiner l'écran noir avec les textes
+    screen.fill((0, 0, 0))  # Fond noir
+    screen.blit(game_over_text, game_over_rect)  # Texte "GAME OVER"
+    screen.blit(score_text, score_rect)         # Score
+    screen.blit(top_score_text, top_score_rect) # Top score
+    screen.blit(restart_text, restart_rect)     # Instructions
+
+    pygame.display.update()
+    waitForPlayerToPressKey()  # Attend que le joueur appuie sur une touche
+
 
 # Afficher l'écran de démarrage
 show_start_screen()
 
-# Positions de sol pour le joueur et les pierres
-player_floor = 510  # Sol visuel pour le joueur (ajusté pour marcher sur la terre)
-stone_floor = 500   # Sol pour les pierres
-
 # Paramètres du joueur et du jeu
-player_x = 100
+player_floor = 510  # Sol pour le joueur
+stone_floor = 500   # Sol pour les pierres
 scroll_speed = 2
 gravity = 1
 default_gravity = gravity
+score_increment = 1
 
-# Initialiser le score
-score = 0
-top_score = 0 
-score_increment = 1 # Points ajoutés à chaque cycle de jeu
+# Variables globales pour les scores
+top_score = 0
 
-# Créer une instance du joueur
-player_instance = Player(player_floor, gravity, image_folder="player_frames")
+# Boucle principale
+while True:
+    # Réinitialisation des variables pour une nouvelle partie
+    score = 0
+    player_x = 100
+    player_instance = Player(player_floor, gravity, image_folder="player_frames")
+    stones = create_stones(stone_image, WIDTH, stone_floor, num_stones=3, min_distance=400)
+    bees = create_bees(WIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame")
+    bg_x1, bg_x2 = 0, background.get_width()
+    running = True
 
-# Créer les pierres
-stones = create_stones(stone_image, WIDTH, stone_floor, num_stones=3, min_distance=400)
+    # Boucle de jeu
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
 
-# Créer des abeilles ennemies avec animation et redimensionnement
-bees = create_bees(WIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame") 
+        # Gestion des touches
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            player_x -= 5
+        if keys[pygame.K_RIGHT]:
+            player_x += 5
+        if keys[pygame.K_SPACE]:
+            player_instance.jump()
 
-# Initialiser les positions du fond pour le défilement
-bg_x1 = 0
-bg_x2 = background.get_width()
+        # Appliquer la gravité
+        if keys[pygame.K_DOWN]:
+            gravity = 3
+        else:
+            gravity = default_gravity
+        player_instance.gravity = gravity
+        player_instance.update()
 
-# Boucle principale du jeu
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+        # Empêcher le joueur de sortir des limites
+        player_x = max(0, min(player_x, WIDTH - player_instance.width))
 
-    # Capturer les touches pressées
-    keys = pygame.key.get_pressed()
+        # Vérifier si le joueur sort de l'écran à gauche
+        if player_x <= 0:
+            running = False
 
-    # Déplacer le joueur à droite et à gauche
-    if keys[pygame.K_LEFT]:
-        player_x -= 5
-    if keys[pygame.K_RIGHT]:
-        player_x += 5
+        # Défilement et collisions des pierres
+        for stone in stones:
+            stone["x"] -= scroll_speed
+            if stone["x"] + stone["width"] < 0:
+                stone["x"] = max([s["x"] for s in stones]) + stone["width"] + 400
+            if detect_collision(player_x, player_instance.y, player_instance, stone):
+                player_x -= 50
 
-    # Sauter avec la touche espace
-    if keys[pygame.K_SPACE]:
-        player_instance.jump()
+        # Défilement et collisions des abeilles
+        for bee in bees:
+            update_bee(bee, WIDTH)
+            if detect_collision(player_x, player_instance.y, player_instance, bee):
+                running = False
 
-    # Redescendre plus vite
-    if keys[pygame.K_DOWN]:
-        gravity = 3
-    else:
-        gravity = default_gravity
-    player_instance.gravity = gravity
+        # Mise à jour du fond
+        bg_x1, bg_x2 = update_background(bg_x1, bg_x2, background.get_width(), scroll_speed)
 
-    # Mettre à jour le joueur (position + animation)
-    player_instance.update()
+        # Affichage des éléments
+        screen.blit(background, (bg_x1, 0))
+        screen.blit(background, (bg_x2, 0))
+        for stone in stones:
+            screen.blit(stone["image"], (stone["x"], stone["y"]))
+        for bee in bees:
+            draw_bee(screen, bee)
+        player_instance.draw(screen, player_x)
 
-    # Empêcher le joueur de sortir de l'écran
-    player_x = max(0, min(player_x, WIDTH - player_instance.width))
+        # Affichage des scores
+        draw_text(screen, f"Score: {score}", font_score, TEXTCOLOR, 10, 10)
+        draw_text(screen, f"Top Score: {top_score}", font_score, TEXTCOLOR, 10, 50)
 
-    # Mettre à jour les positions du fond
-    bg_x1, bg_x2 = update_background(bg_x1, bg_x2, background.get_width(), scroll_speed)
+        # Mise à jour de l'écran
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
 
-    # Faire défiler les pierres et vérifier les collisions
-    for stone in stones:
-        stone["x"] -= scroll_speed
-        if stone["x"] + stone["width"] < 0:
-            # Réinitialiser la pierre qui sort de l'écran
-            stone["x"] = max([s["x"] for s in stones]) + stone["width"] + 400
+        # Mise à jour du score
+        score += score_increment * scroll_speed
 
-        # Vérifier la collision
-        if detect_collision(player_x, player_instance.y, player_instance, stone):
-            print("Collision avec une pierre !")
-            player_x -= 50  # Collision, reculer le joueur
+    # Fin de la partie
+    if score > top_score:
+        top_score = score
+    show_game_over_screen(score, top_score)
 
-    # Mise à jour de l'affichage
-    # Dessiner le fond en premier
-    screen.blit(background, (bg_x1, 0))
-    screen.blit(background, (bg_x2, 0))
 
-    # Dessiner les abeilles
-    for bee in bees:
-        update_bee(bee,  WIDTH)  # Mettre à jour la position et l'animation de l'abeille
-        draw_bee(screen, bee)  # Dessiner l'abeille animée
+  
 
-        # Vérifier la collision avec l'abeille
-        if detect_collision(player_x, player_instance.y, player_instance, bee):
-            print("Collision avec une abeille ! Game Over")
-            running = False  # Arrêter le jeu en cas de collision avec l'abeille
 
-    # Dessiner les pierres
-    for stone in stones:
-        screen.blit(stone["image"], (stone["x"], stone["y"]))
 
-    # Dessiner le joueur avec l'animation
-    player_instance.draw(screen, player_x)
-
-    # Afficher le score et le top score **APRÈS** tous les éléments visuels
-    draw_text(screen, f"Score: {score}", font_score, TEXTCOLOR, 10, 10)
-    draw_text(screen, f"Top Score: {top_score}", font_score, TEXTCOLOR, 10, 50)
-    
-    # Mettre à jour l'affichage
-    pygame.display.flip()
-    pygame.time.Clock().tick(60)
-
-    # Mettre à jour le score
-    score += score_increment * scroll_speed
-
-# Mettre à jour le top score si nécessaire
-if score > top_score:
-    top_score = score
 
