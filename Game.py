@@ -147,6 +147,14 @@ while True:
         # Vérifier si le joueur sort de l'écran à gauche
         if player_x <= 0:
             running = False
+        
+         # Augmenter la difficulté en fonction du score
+        if score % 300 == 0:  # Tous les 300 points
+            scroll_speed += 1  # Augmenter la vitesse de défilement
+        
+        # Mettre à jour les abeilles
+        for bee in bees:
+            bee["x"] -= scroll_speed  # Les abeilles suivent la vitesse
 
         # Défilement et collisions des pierres
         for stone in stones:
