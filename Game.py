@@ -1,18 +1,18 @@
 # Game.py
-import pygame
-import sys
+import pygame, sys
 import os
 from player import Player
 from stone import create_stones, detect_collision
 from background import update_background
 from bee import create_bees, update_bee, draw_bee
+WINDOWWIDTH = 800
+WINDOWHEIGHT = 600
+TEXTCOLOR = (225, 225, 225)  #white
 
 # Start Pygame
 pygame.init()
 
 # Window size
-WINDOWWIDTH = 800
-WINDOWHEIGHT = 600
 screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
 pygame.display.set_caption("Bee Running")
 
@@ -24,7 +24,6 @@ stone_image = pygame.image.load('stone.png').convert_alpha()
 # font creation
 font_large = pygame.font.SysFont("courier new", 62)
 font_score = pygame.font.SysFont("arial", 36)
-TEXTCOLOR = (225, 225, 225)  # white
 
 # Function for quitting properly
 def terminate():
@@ -198,10 +197,13 @@ while True:
     if score > top_score:
         top_score = score
     show_game_over_screen(score, top_score)
+    scroll_speed = 2  # Reset the scroll speed after Game Over
 
 
-  
-
+#Background : https://fr.vecteezy.com/art-vectoriel/4277175-foret-jeu-fond
+#Abeille : https://pixabay.com/gifs/wasp-hornet-insect-fly-pixel-art-12292/
+#Personnage : https://www.gifsanimes.com/img-course-a-pied-image-animee-0008-60786.htm
+#Rocher : https://fr.vecteezy.com/png/8502483-pierres-de-roche-et-rochers-de-style-dessin-anime 
 
 
 
