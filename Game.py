@@ -9,22 +9,6 @@ WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
 TEXTCOLOR = (225, 225, 225)  #white
 
-# Start Pygame
-pygame.init()
-
-# Window size
-screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
-pygame.display.set_caption("Bee Running")
-
-# Download background
-background = pygame.image.load('Fond jeu.png').convert()
-background = pygame.transform.scale(background, (WINDOWWIDTH, WINDOWHEIGHT))  #allows to adjust the background image to the window size  
-stone_image = pygame.image.load('stone.png').convert_alpha()
-
-# font creation
-font_large = pygame.font.SysFont("courier new", 62)
-font_score = pygame.font.SysFont("arial", 36)
-
 # Function for quitting properly
 def terminate():
     pygame.quit()
@@ -44,6 +28,25 @@ def draw_text(surface, text, font, color, x, y):
     text_obj = font.render(text, True, color)
     text_rect = text_obj.get_rect(topleft=(x, y))
     surface.blit(text_obj, text_rect)
+
+# Start Pygame
+pygame.init()
+# Window size
+screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+pygame.display.set_caption("Bee Running")
+
+# Download background
+background = pygame.image.load('Fond jeu.png').convert()
+background = pygame.transform.scale(background, (WINDOWWIDTH, WINDOWHEIGHT))  #allows to adjust the background image to the window size  
+stone_image = pygame.image.load('stone.png').convert_alpha()
+
+# font creation
+font_large = pygame.font.SysFont("courier new", 62)
+font_score = pygame.font.SysFont("arial", 36)
+
+# Set up sounds.
+gameOverSound = pygame.mixer.Sound('gameover.wav')
+pygame.mixer.music.load('background.mid')
 
 # Function to set start screen
 def show_start_screen():
@@ -117,6 +120,8 @@ while True:
     bees = create_bees(WINDOWWIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame") #settings for bees creation
     bg_x1, bg_x2 = 0, background.get_width() #allows the background to follow the screen 
     running = True #the player starts running
+    pygame.mixer.music.play(-1, 0.0)
+
 
     # Game loop
     while running: # The game loop runs while the game part is playing.
@@ -194,10 +199,17 @@ while True:
         score += score_increment * scroll_speed
 
     # end of the game
+    pygame.mixer.music.stop()
     if score > top_score:
         top_score = score
+    gameOverSound.play()
     show_game_over_screen(score, top_score)
     scroll_speed = 2  # Reset the scroll speed after Game Over
+
+    gameOverSound.stop()
+    
+     
+
 
 
 #Background : https://fr.vecteezy.com/art-vectoriel/4277175-foret-jeu-fond
