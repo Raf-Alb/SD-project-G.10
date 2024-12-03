@@ -1,7 +1,5 @@
 # Game.py
-import pygame
-import sys
-import random
+import pygame, sys, random
 from player import Player
 from stone import Stone, create_stones
 from bee import Bee, create_bees
@@ -10,13 +8,14 @@ from background import update_background
 # Configuration de la fenêtre
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
-TEXTCOLOR = (225, 225, 225)
+TEXTCOLOR = (225, 225, 225) #white
 
 # Classe pour gérer le jeu
 class Game:
     def __init__(self):
         # Initialisation de Pygame
         pygame.init()
+        #window size
         self.screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
         pygame.display.set_caption("Bee Running")
         self.clock = pygame.time.Clock()
@@ -25,8 +24,10 @@ class Game:
         self.background = pygame.image.load('Fond jeu.png').convert()
         self.background = pygame.transform.scale(self.background, (WINDOWWIDTH, WINDOWHEIGHT))
         self.stone_image = pygame.image.load('stone.png').convert_alpha()
+        #font creation
         self.font_large = pygame.font.SysFont("courier new", 62)
         self.font_score = pygame.font.SysFont("arial", 36)
+        #set up sounds
         self.gameOverSound = pygame.mixer.Sound('finalmusic.wav')
         pygame.mixer.music.load('background.mid')
 
@@ -38,7 +39,8 @@ class Game:
         self.default_gravity = self.gravity
         self.score_increment = 1
         self.top_score = 0
-
+    
+    #function for quitting properly
     def terminate(self):
         pygame.quit()
         sys.exit()
@@ -50,36 +52,45 @@ class Game:
                     self.terminate()
                 if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                     return
-
+    #function to draw score on screen
     def draw_text(self, text, font, color, x, y):
         text_obj = font.render(text, True, color)
         text_rect = text_obj.get_rect(topleft=(x, y))
         self.screen.blit(text_obj, text_rect)
-
+    #function to start the screen
     def show_start_screen(self):
-        self.screen.blit(self.background, (0, 0))
+        #show the background picture
+        self.screen.blit(self.background, (0, 0)) #sets background at (0,0) position
+        #initial text "Bee running"
         text_surface1 = self.font_large.render("Bee Running", True, (0, 40, 0))
         text_surface2 = self.font_large.render("Press a key to start", True, (0, 40, 0))
         text_rect1 = text_surface1.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3))
         text_rect2 = text_surface2.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3 + 50))
+        #show text on screen
         self.screen.blit(text_surface1, text_rect1)
         self.screen.blit(text_surface2, text_rect2)
-        pygame.display.update()
-        self.wait_for_key()
+        pygame.display.update() #update the display
+        self.wait_for_key() #wait for player to start the game
 
+    #function for game over screen
     def show_game_over_screen(self, score):
+        #text for game over
         game_over_text = self.font_large.render("GAME OVER", True, (255, 0, 0))
         game_over_rect = game_over_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 4))
+        #text for score
         score_text = self.font_score.render(f"Score: {score}", True, (255, 255, 255))
         score_rect = score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2))
+        #text for top score
         top_score_text = self.font_score.render(f"Top Score: {self.top_score}", True, (255, 255, 255))
         top_score_rect = top_score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 50))
+        #text for restart instructions
         restart_text = self.font_score.render("Press any key to restart", True, (200, 200, 200))
         restart_rect = restart_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 100))
+        #game over final display
         self.screen.fill((0, 0, 0))
-        self.screen.blit(game_over_text, game_over_rect)
-        self.screen.blit(score_text, score_rect)
-        self.screen.blit(top_score_text, top_score_rect)
+        self.screen.blit(game_over_text, game_over_rect) #game over
+        self.screen.blit(score_text, score_rect) #score
+        self.screen.blit(top_score_text, top_score_rect) #top score
         self.screen.blit(restart_text, restart_rect)
         pygame.display.update()
         self.wait_for_key()
