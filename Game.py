@@ -27,7 +27,7 @@ class Game:
         self.stone_image = pygame.image.load('stone.png').convert_alpha()
         self.font_large = pygame.font.SysFont("courier new", 62)
         self.font_score = pygame.font.SysFont("arial", 36)
-        self.gameOverSound = pygame.mixer.Sound('gameover.wav')
+        self.gameOverSound = pygame.mixer.Sound('finalmusic.wav')
         pygame.mixer.music.load('background.mid')
 
         # Paramètres du joueur et du jeu
