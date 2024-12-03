@@ -1,212 +1,196 @@
 # Game.py
-import pygame, sys
-import os
+import pygame
+import sys
+import random
 from player import Player
-from stone import create_stones, detect_collision
+from stone import Stone, create_stones
+from bee import Bee, create_bees
 from background import update_background
-from bee import create_bees, update_bee, draw_bee
+
+# Configuration de la fenêtre
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
-TEXTCOLOR = (225, 225, 225)  #white
+TEXTCOLOR = (225, 225, 225)
 
-# Function for quitting properly
-def terminate():
-    pygame.quit()
-    sys.exit()
+# Classe pour gérer le jeu
+class Game:
+    def __init__(self):
+        # Initialisation de Pygame
+        pygame.init()
+        self.screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+        pygame.display.set_caption("Bee Running")
+        self.clock = pygame.time.Clock()
 
-# Function strating the game
-def waitForPlayerToPressKey():
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                return
+        # Charger les ressources
+        self.background = pygame.image.load('Fond jeu.png').convert()
+        self.background = pygame.transform.scale(self.background, (WINDOWWIDTH, WINDOWHEIGHT))
+        self.stone_image = pygame.image.load('stone.png').convert_alpha()
+        self.font_large = pygame.font.SysFont("courier new", 62)
+        self.font_score = pygame.font.SysFont("arial", 36)
+        self.gameOverSound = pygame.mixer.Sound('gameover.wav')
+        pygame.mixer.music.load('background.mid')
 
-# Function to draw score on screen
-def draw_text(surface, text, font, color, x, y):
-    text_obj = font.render(text, True, color)
-    text_rect = text_obj.get_rect(topleft=(x, y))
-    surface.blit(text_obj, text_rect)
+        # Paramètres du joueur et du jeu
+        self.player_floor = 510
+        self.stone_floor = 500
+        self.scroll_speed = 2
+        self.gravity = 1
+        self.default_gravity = self.gravity
+        self.score_increment = 1
+        self.top_score = 0
 
-# Start Pygame
-pygame.init()
-# Window size
-screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
-pygame.display.set_caption("Bee Running")
+    def terminate(self):
+        pygame.quit()
+        sys.exit()
 
-# Download background
-background = pygame.image.load('Fond jeu.png').convert()
-background = pygame.transform.scale(background, (WINDOWWIDTH, WINDOWHEIGHT))  #allows to adjust the background image to the window size  
-stone_image = pygame.image.load('stone.png').convert_alpha()
+    def wait_for_key(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.terminate()
+                if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                    return
 
-# font creation
-font_large = pygame.font.SysFont("courier new", 62)
-font_score = pygame.font.SysFont("arial", 36)
+    def draw_text(self, text, font, color, x, y):
+        text_obj = font.render(text, True, color)
+        text_rect = text_obj.get_rect(topleft=(x, y))
+        self.screen.blit(text_obj, text_rect)
 
-# Set up sounds.
-gameOverSound = pygame.mixer.Sound('gameover.wav')
-pygame.mixer.music.load('background.mid')
+    def show_start_screen(self):
+        self.screen.blit(self.background, (0, 0))
+        text_surface1 = self.font_large.render("Bee Running", True, (0, 40, 0))
+        text_surface2 = self.font_large.render("Press a key to start", True, (0, 40, 0))
+        text_rect1 = text_surface1.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3))
+        text_rect2 = text_surface2.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3 + 50))
+        self.screen.blit(text_surface1, text_rect1)
+        self.screen.blit(text_surface2, text_rect2)
+        pygame.display.update()
+        self.wait_for_key()
 
-# Function to set start screen
-def show_start_screen():
-    # Show the background picture
-    screen.blit(background, (0, 0))  # sets background at (0, 0) position
+    def show_game_over_screen(self, score):
+        game_over_text = self.font_large.render("GAME OVER", True, (255, 0, 0))
+        game_over_rect = game_over_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 4))
+        score_text = self.font_score.render(f"Score: {score}", True, (255, 255, 255))
+        score_rect = score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2))
+        top_score_text = self.font_score.render(f"Top Score: {self.top_score}", True, (255, 255, 255))
+        top_score_rect = top_score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 50))
+        restart_text = self.font_score.render("Press any key to restart", True, (200, 200, 200))
+        restart_rect = restart_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 100))
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(game_over_text, game_over_rect)
+        self.screen.blit(score_text, score_rect)
+        self.screen.blit(top_score_text, top_score_rect)
+        self.screen.blit(restart_text, restart_rect)
+        pygame.display.update()
+        self.wait_for_key()
 
-    # Initial text "Bee Running"
-    text_surface1 = font_large.render("Bee Running", True, (0, 40, 0))
-    text_surface2 = font_large.render("Press a key to start", True, (0, 40, 0))
-    text_rect1 = text_surface1.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3))
-    text_rect2 = text_surface2.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3 + 50))
+    def run(self):
+        # Écran de démarrage
+        self.show_start_screen()
 
-    # Show text on screen
-    screen.blit(text_surface1, text_rect1)
-    screen.blit(text_surface2, text_rect2)
+        while True:
+            # Réinitialisation des variables pour une nouvelle partie
+            score = 0
+            player_x = 100
+            player = Player(self.player_floor, self.gravity, image_folder="player_frames")
+            stones = create_stones(self.stone_image, WINDOWWIDTH, self.stone_floor, num_stones=3, min_distance=400)
+            bees = create_bees(WINDOWWIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame")
+            bg_x1, bg_x2 = 0, self.background.get_width()
+            running = True
+            pygame.mixer.music.play(-1, 0.0)
 
-    pygame.display.update()  # Update the display
-    waitForPlayerToPressKey()  # Wait for player to start the game
+            # Boucle principale du jeu
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.terminate()
+
+                # Gérer les mouvements du joueur
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_LEFT]:
+                    player_x -= 5
+                if keys[pygame.K_RIGHT]:
+                    player_x += 5
+                if keys[pygame.K_SPACE]:
+                    player.jump()
+                if keys[pygame.K_DOWN]:
+                    self.gravity = 3
+                else:
+                    self.gravity = self.default_gravity
+                player.gravity = self.gravity
+                player.update()
+
+                # Empêcher le joueur de sortir de l'écran et Game Over s'il sort à gauche
+                player_x = max(0, min(player_x, WINDOWWIDTH - player.width))
+                if player_x <= 0:
+                    running = False
+
+                # Augmenter la difficulté
+                if score % 500 == 0:
+                    self.scroll_speed += 1
+
+                # Mettre à jour le fond
+                bg_x1, bg_x2 = update_background(bg_x1, bg_x2, self.background.get_width(), self.scroll_speed)
+
+                # Dessiner le fond
+                self.screen.blit(self.background, (bg_x1, 0))
+                self.screen.blit(self.background, (bg_x2, 0))
+
+                # Dessiner les pierres
+                for stone in stones:
+                    stone.update(self.scroll_speed, WINDOWWIDTH, 400)
+                    stone.draw(self.screen)
+                    if stone.detect_collision(player_x, player.y, player):
+                        player_x -= 50
+
+                # Maintenir au moins 3 pierres
+                if len(stones) < 3:
+                    new_stone = Stone(
+                        x=WINDOWWIDTH + random.randint(400, 600),
+                        y=self.stone_floor - random.randint(40, 100),
+                        width=random.randint(40, 100),
+                        height=random.randint(40, 100),
+                        image=self.stone_image
+                    )
+                    stones.append(new_stone)
+
+                # Dessiner les abeilles
+                for bee in bees:
+                    bee.update(WINDOWWIDTH, player.y, scroll_speed=self.scroll_speed)
+                    bee.draw(self.screen)
+                    if bee.detect_collision(player_x, player.y, player):
+                        running = False
 
 
-# Fonction for Game Over screen
-def show_game_over_screen(score, top_score):
-    # Text "GAME OVER" 
-    game_over_text = font_large.render("GAME OVER", True, (255, 0, 0))
-    game_over_rect = game_over_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 4))  # higher position
+                # Dessiner le joueur
+                player.draw(self.screen, player_x)
 
-    # Text for score
-    score_text = font_score.render(f"Score: {score}", True, (255, 255, 255))
-    score_rect = score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2))  # score in the middle
+                # Afficher les scores
+                self.draw_text(f"Score: {score}", self.font_score, TEXTCOLOR, 10, 10)
+                self.draw_text(f"Top Score: {self.top_score}", self.font_score, TEXTCOLOR, 10, 50)
 
-    # Text for top score
-    top_score_text = font_score.render(f"Top Score: {top_score}", True, (255, 255, 255))
-    top_score_rect = top_score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 50))
+                # Mettre à jour l'affichage
+                pygame.display.flip()
+                self.clock.tick(60)
 
-    # Text for restart instructions
-    restart_text = font_score.render("Press any key to restart", True, (200, 200, 200))
-    restart_rect = restart_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 100))
+                # Mise à jour du score
+                score += self.score_increment * self.scroll_speed
 
-    # Game over final display
-    screen.fill((0, 0, 0))  #Black background
-    screen.blit(game_over_text, game_over_rect)  # Text "GAME OVER"
-    screen.blit(score_text, score_rect)         # Score
-    screen.blit(top_score_text, top_score_rect) # Top score
-    screen.blit(restart_text, restart_rect)     # Instructions
-
-    pygame.display.update()
-    waitForPlayerToPressKey() # Wait for player to start the game
+            # Fin de partie
+            pygame.mixer.music.stop()
+            if score > self.top_score:
+                self.top_score = score
+            self.gameOverSound.play()
+            self.show_game_over_screen(score)
+            self.scroll_speed = 2
+            self.gameOverSound.stop()
 
 
-# Show starting screen
-show_start_screen()
-
-# Player and game settings
-player_floor = 510  # choose player's floor level
-stone_floor = 500   # choose stones' floor level
-scroll_speed = 2
-gravity = 1
-default_gravity = gravity
-score_increment = 1
-
-# set first top score
-top_score = 0
-
-# Main loop
-while True:
-    #Set up the start of the game
-    score = 0
-    player_x = 100
-    player_instance = Player(player_floor, gravity, image_folder="player_frames")
-    stones = create_stones(stone_image, WINDOWWIDTH, stone_floor, num_stones=3, min_distance=400) #settings for stones creation
-    bees = create_bees(WINDOWWIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame") #settings for bees creation
-    bg_x1, bg_x2 = 0, background.get_width() #allows the background to follow the screen 
-    running = True #the player starts running
-    pygame.mixer.music.play(-1, 0.0)
+if __name__ == "__main__":
+    game = Game()
+    game.run()
 
 
-    # Game loop
-    while running: # The game loop runs while the game part is playing.
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-
-        # the keys that allow the player to move 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            player_x -= 5
-        if keys[pygame.K_RIGHT]:
-            player_x += 5
-        if keys[pygame.K_SPACE]:
-            player_instance.jump()
-
-        # Increases gravity
-        if keys[pygame.K_DOWN]:
-            gravity = 3
-        else:
-            gravity = default_gravity #applies normal gravity
-        player_instance.gravity = gravity
-        player_instance.update()
-
-        # prevents the player from getting out of the screen
-        player_x = max(0, min(player_x, WINDOWWIDTH - player_instance.width))
-
-        # Stops the game if the player cannot stay on the left side of the screen
-        if player_x <= 0:
-            running = False
-        
-         # increases difficulty of the game
-        if score % 500 == 0:  # each 500 points
-            scroll_speed += 1  # increases the scroll speed
-        
-        # Upload the bees
-        for bee in bees:
-            bee["x"] -= scroll_speed  # allows the bees to follow the speed of the screen
-
-        # Scrolling and collision for stones
-        for stone in stones:
-            stone["x"] -= scroll_speed
-            if stone["x"] + stone["width"] < 0:
-                stone["x"] = max([s["x"] for s in stones]) + stone["width"] + 400
-            if detect_collision(player_x, player_instance.y, player_instance, stone):
-                player_x -= 50
-
-        # Scrolling and collision for bees
-        for bee in bees:
-            update_bee(bee, WINDOWWIDTH)
-            if detect_collision(player_x, player_instance.y, player_instance, bee):
-                running = False #stops the game if there is a collision
-
-        # updating the background to follow the scrolling speed
-        bg_x1, bg_x2 = update_background(bg_x1, bg_x2, background.get_width(), scroll_speed)
-
-        # For game fluidity
-        screen.blit(background, (bg_x1, 0))
-        screen.blit(background, (bg_x2, 0))
-        for stone in stones:
-            screen.blit(stone["image"], (stone["x"], stone["y"]))
-        for bee in bees:
-            draw_bee(screen, bee)
-        player_instance.draw(screen, player_x)
-
-        # Show scores
-        draw_text(screen, f"Score: {score}", font_score, TEXTCOLOR, 10, 10)
-        draw_text(screen, f"Top Score: {top_score}", font_score, TEXTCOLOR, 10, 50)
-
-        # Screen upload
-        pygame.display.flip()
-        pygame.time.Clock().tick(60)
-
-        # Score upload
-        score += score_increment * scroll_speed
-
-    # end of the game
-    pygame.mixer.music.stop()
-    if score > top_score:
-        top_score = score
-    gameOverSound.play()
-    show_game_over_screen(score, top_score)
-    scroll_speed = 2  # Reset the scroll speed after Game Over
-
-    gameOverSound.stop()
     
      
 
