@@ -1,3 +1,5 @@
+import os
+import pygame
 
 class Player:
     def __init__(self, floor, gravity, image_folder, animation_speed=5):

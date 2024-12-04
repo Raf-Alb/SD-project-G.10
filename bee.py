@@ -1,5 +1,6 @@
 # bee.py
-import pygame, os, random, math
+import pygame, random, math
+import os
 
 class Bee:
     def __init__(self, x, y, speed, images, animation_speed):
