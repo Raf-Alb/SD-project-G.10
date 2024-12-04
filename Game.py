@@ -5,17 +5,17 @@ from stone import Stone, create_stones
 from bee import Bee, create_bees
 from background import update_background
 
-# Configuration de la fenêtre
+# Window settings
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
 TEXTCOLOR = (225, 225, 225) #white
 
-# Classe pour gérer le jeu
+# Game management class
 class Game:
     def __init__(self):
-        # Initialisation de Pygame
+        # Pygame initialization
         pygame.init()
-        #window size
+        # Window size
         self.screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
         pygame.display.set_caption("Bee Running")
         self.clock = pygame.time.Clock()
