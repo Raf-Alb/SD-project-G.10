@@ -29,7 +29,7 @@ class Game:
         self.font_score = pygame.font.SysFont("arial", 36)
         # Set up sounds
         self.gameOverSound = pygame.mixer.Sound('finalmusic.wav')
-        pygame.mixer.music.load('background.mid')
+        pygame.mixer.music.load('compressed_audio.wav')
 
         # Player and game settings
         self.player_floor = 510
@@ -126,10 +126,19 @@ class Game:
                     player.jump()
                 if keys[pygame.K_DOWN]:
                     self.gravity = 3
+                if keys[pygame.K_a]:
+                    player_x -= 5
+                if keys[pygame.K_d]:
+                    player_x += 5
+                if keys[pygame.K_w]:
+                    player.jump()
+                if keys[pygame.K_s]:
+                    self.gravity = 3
                 else:
                     self.gravity = self.default_gravity
                 player.gravity = self.gravity
                 player.update()
+                
 
                 # Prevent the player from exiting the screen
                 player_x = max(0, min(player_x, WINDOWWIDTH - player.width))
