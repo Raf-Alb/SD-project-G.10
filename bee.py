@@ -23,7 +23,7 @@ class Bee:
 
         # Follow the player by adjusting the vertical position
         if player_y is not None:
-            tracking_speed = 1.5  # Limits vertical speed
+            tracking_speed = 1  # Limits vertical speed
             if self.y < player_y:
                 self.y += min(tracking_speed, abs(player_y - self.y))
             elif self.y > player_y:

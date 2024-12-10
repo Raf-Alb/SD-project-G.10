@@ -39,6 +39,7 @@ class Game:
         self.default_gravity = self.gravity
         self.score_increment = 1
         self.top_score = 0
+        self.lives = 3
     
     # Function for quitting properly
     def terminate(self):
@@ -52,18 +53,35 @@ class Game:
                     self.terminate()
                 if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                     return
+                
+       
     # Function to draw score on screen
     def draw_text(self, text, font, color, x, y):
         text_obj = font.render(text, True, color)
         text_rect = text_obj.get_rect(topleft=(x, y))
         self.screen.blit(text_obj, text_rect)
+
+    #function to draw lives on screen 
+    def draw_lives(self):
+        for i in range(self.lives): 
+            pygame.draw.rect(self.screen, (255, 0, 0), (10 + i * 40, 90, 30, 30)) #creates a red box for each life
+
+    #function to restart settings after collision with bee
+    def restart_game_with_lives(self):
+        self.scroll_speed = 2
+        player_x = 100
+        stones = create_stones(self.stone_image, WINDOWWIDTH, self.stone_floor, num_stones=3, min_distance=400)
+        bees = create_bees(WINDOWWIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame")
+        bg_x1, bg_x2 = 0, self.background.get_width()
+        return player_x, stones, bees, bg_x1, bg_x2 
+     
     # Function to start the screen
     def show_start_screen(self):
         # Show the background picture
         self.screen.blit(self.background, (0, 0)) # Sets background at (0,0) position
         # Initial text "Bee running"
         text_surface1 = self.font_large.render("Bee Running", True, (0, 40, 0))
-        text_surface2 = self.font_large.render("Press a key to start", True, (0, 40, 0))
+        text_surface2 = self.font_large.render("Press any key to start", True, (0, 40, 0))
         text_rect1 = text_surface1.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3))
         text_rect2 = text_surface2.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3 + 50))
         # Show text on screen
@@ -84,7 +102,7 @@ class Game:
         top_score_text = self.font_score.render(f"Top Score: {self.top_score}", True, (255, 255, 255))
         top_score_rect = top_score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 50))
         # Text for restart instructions
-        restart_text = self.font_score.render("Press any key to restart", True, (200, 200, 200))
+        restart_text = self.font_score.render("Press any key to quit", True, (200, 200, 200))
         restart_rect = restart_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 100))
         # Game over final display
         self.screen.fill((0, 0, 0))
@@ -93,13 +111,13 @@ class Game:
         self.screen.blit(top_score_text, top_score_rect) # Top score
         self.screen.blit(restart_text, restart_rect)
         pygame.display.update()
-        self.wait_for_key()
+        self.wait_for_key() 
 
     def run(self):
         # Startup screen
         self.show_start_screen()
 
-        while True:
+        while self.lives > 0:
             # Resetting variables for a new game
             score = 0
             player_x = 100
@@ -142,8 +160,12 @@ class Game:
 
                 # Prevent the player from exiting the screen
                 player_x = max(0, min(player_x, WINDOWWIDTH - player.width))
-                if player_x <= 0: # Game Over if player runs to the left part of the screen
-                    running = False
+                if player_x <= 0: # if player hits left part of the screen he loses one life and gets back to initial position
+                    self.lives -= 1
+                    player_x = 100 
+                    if self.lives <= 0:
+                        running = False
+    
 
                 # Increase difficulty (speed)
                 if score % 500 == 0:
@@ -160,8 +182,12 @@ class Game:
                 for stone in stones:
                     stone.update(self.scroll_speed, WINDOWWIDTH, 400)
                     stone.draw(self.screen)
-                    if stone.detect_collision(player_x, player.y, player): # If player touches the rock, he is set back 50 in the game
-                        player_x -= 50
+                    if stone.detect_collision(player_x, player.y, player): # If player touches the rock
+                        player_x -= 50 #he is set back 50 in the game
+                        self.lives -= 1 #and loses a life
+                        if self.lives <= 0:
+                            running = False #game stops if he has 0 lifes left
+    
 
                 # Maintain enough stone as the game progresses
                 if len(stones) < 3:
@@ -178,8 +204,12 @@ class Game:
                 for bee in bees:
                     bee.update(WINDOWWIDTH, player.y, scroll_speed=self.scroll_speed)
                     bee.draw(self.screen)
-                    if bee.detect_collision(player_x, player.y, player): # Game Over if player hits the bee
-                        running = False
+                    if bee.detect_collision(player_x, player.y, player): # lost of a life and restart if touch bee
+                        self.lives -= 1
+                        if self.lives > 0:
+                            player_x, stones, bees, bg_x1, bg_x2 = self.restart_game_with_lives()
+                        else: 
+                            running = False
 
 
                 # Draw the player
@@ -189,6 +219,9 @@ class Game:
                 self.draw_text(f"Score: {score}", self.font_score, TEXTCOLOR, 10, 10)
                 self.draw_text(f"Top Score: {self.top_score}", self.font_score, TEXTCOLOR, 10, 50)
 
+                #display lifes
+                self.draw_lives()
+
                 # Update display
                 pygame.display.flip()
                 self.clock.tick(60)
@@ -196,7 +229,8 @@ class Game:
                 # Update score
                 score += self.score_increment * self.scroll_speed
 
-            # Game over
+            # Game over if no more lives
+        if self.lives <= 0:
             pygame.mixer.music.stop()
             if score > self.top_score:
                 self.top_score = score
@@ -204,7 +238,7 @@ class Game:
             self.show_game_over_screen(score)
             self.scroll_speed = 2
             self.gameOverSound.stop()
-
+        
 
 if __name__ == "__main__":
     game = Game()
