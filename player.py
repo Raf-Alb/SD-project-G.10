@@ -2,8 +2,7 @@ import os
 import pygame
 
 class Player:
-    def __init__(self, floor, gravity, image_folder, animation_speed=5):
-        # Initializes the player's vertical position so that his feet touch the ground
+    def __init__(self, floor, gravity, image_folder, animation_speed=5): # Initializes the player's vertical position so that his feet touch the ground
         self.y = floor
         self.y_speed = 0
         self.jumping = 0
@@ -18,8 +17,8 @@ class Player:
         self.width = self.images[0].get_width()
         self.height = self.images[0].get_height()
 
-        # Create a mask for the player (based on first image)
-        self.mask = pygame.mask.from_surface(self.images[self.current_image])
+        # Create a mask for the player
+        self.mask = pygame.mask.from_surface(self.images[self.current_image]) #comes from chatgpt
 
         # Animation speed
         self.animation_speed = animation_speed
@@ -28,9 +27,9 @@ class Player:
     def load_images(self, folder):
         # Loads all images from a folder
         images = [pygame.image.load(os.path.join(folder, img)) for img in sorted(os.listdir(folder)) if img.endswith(".png")]
-        return images
+        return images #this function comes from chatgpt, as we wanted to create a form of dynamism of the player, we took the different frames of a gif
 
-    def jump(self):
+    def jump(self): 
         if self.jumping == 0:
             self.y_speed = -20  # Initialize jump speed
             self.jumping = 1
@@ -39,7 +38,7 @@ class Player:
             self.jumping = 2
         elif self.jumping == 2 and self.y_speed >= 0:
             self.y_speed = -15  # Triple jump
-            self.jumping = 3
+            self.jumping = 3  #we needed help from chatgpt for the creation of a double, or triple jump
 
     def update(self):
         # Updates player position and animation
@@ -51,7 +50,7 @@ class Player:
             self.jumping = 0 # No jump when game starts
             self.y_speed = 0  # Initial vertical speed
             
-        # Animation management
+        # creates a more fluid player movement
         self.animation_counter += 1
         if self.animation_counter >= self.animation_speed:
             self.current_image = (self.current_image + 1) % len(self.images)

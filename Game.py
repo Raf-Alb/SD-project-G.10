@@ -1,35 +1,36 @@
 import pygame, sys, random
+#these 4 commands allow to import the classes created in other pages
 from player import Player
 from stone import Stone, create_stones
 from bee import Bee, create_bees
 from background import update_background
 
-# Window settings
+#Window settings
 WINDOWWIDTH = 800
 WINDOWHEIGHT = 600
-TEXTCOLOR = (225, 225, 225)  # White
+TEXTCOLOR = (225, 225, 225)  #White
 
 
 class Game:
-    def __init__(self):
-        pygame.init()
-        self.screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
-        pygame.display.set_caption("Bee Running")
+    def __init__(self): #creates a new class
+        pygame.init() #starts pygame library
+        self.screen = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT)) #creates the game screen
+        pygame.display.set_caption("Bee Running") #displays the game title
         self.clock = pygame.time.Clock()
 
         # Load resources
-        self.background = pygame.image.load('Fond jeu.png').convert()
-        self.background = pygame.transform.scale(self.background, (WINDOWWIDTH, WINDOWHEIGHT))
-        self.stone_image = pygame.image.load('stone.png').convert_alpha()
-        self.font_large = pygame.font.SysFont("courier new", 62)
+        self.background = pygame.image.load('Fond jeu.png').convert() #download background
+        self.background = pygame.transform.scale(self.background, (WINDOWWIDTH, WINDOWHEIGHT)) #adjusts the background to the game window
+        self.stone_image = pygame.image.load('stone.png').convert_alpha() #download stones
+        self.font_large = pygame.font.SysFont("courier new", 62) # two next lines define font
         self.font_score = pygame.font.SysFont("arial", 36)
-        self.gameOverSound = pygame.mixer.Sound('finalmusic.wav')
-        pygame.mixer.music.load('compressed_audio.wav')
+        self.gameOverSound = pygame.mixer.Sound('finalmusic.wav') #define the music for game over
+        pygame.mixer.music.load('compressed_audio.wav') #defines music for game
 
         # Player and game settings
-        self.player_floor = 510
-        self.stone_floor = 500
-        self.scroll_speed = 2
+        self.player_floor = 510 #player's floor level means that it cannot go lower
+        self.stone_floor = 500 #stones' floor level
+        self.scroll_speed = 2 
         self.gravity = 1
         self.default_gravity = self.gravity
         self.score_increment = 1
@@ -57,15 +58,7 @@ class Game:
         for i in range(self.lives):
             pygame.draw.rect(self.screen, (255, 0, 0), (10 + i * 40, 90, 30, 30))  # Draw a red box for each life
 
-    def restart_game_with_lives(self):
-        self.scroll_speed = 2
-        player_x = 100
-        stones = create_stones(self.stone_image, WINDOWWIDTH, self.stone_floor, num_stones=3, min_distance=400)
-        bees = create_bees(WINDOWWIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame")
-        bg_x1, bg_x2 = 0, self.background.get_width()
-        return player_x, stones, bees, bg_x1, bg_x2
-
-    def show_start_screen(self):
+    def show_start_screen(self): #defines the display of the start screen
         self.screen.blit(self.background, (0, 0))
         text_surface1 = self.font_large.render("Bee Running", True, (0, 40, 0))
         text_surface2 = self.font_large.render("Press any key to start", True, (0, 40, 0))
@@ -76,7 +69,15 @@ class Game:
         pygame.display.update()
         self.wait_for_key()
 
-    def show_game_over_screen(self, score):
+    def restart_game_with_lives(self): #puts back the initial parameters
+            self.scroll_speed = 2
+            player_x = 100
+            stones = create_stones(self.stone_image, WINDOWWIDTH, self.stone_floor, num_stones=3, min_distance=400)
+            bees = create_bees(WINDOWWIDTH, y_range=(20, 300), num_bees=2, min_distance=500, image_folder="bee_frame")
+            bg_x1, bg_x2 = 0, self.background.get_width() # reset the background axis
+            return player_x, stones, bees, bg_x1, bg_x2
+    
+    def show_game_over_screen(self, score): #defines the display of the game over screen
         game_over_text = self.font_large.render("GAME OVER", True, (255, 0, 0))
         game_over_rect = game_over_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 4))
         score_text = self.font_score.render(f"Score: {score}", True, (255, 255, 255))
@@ -85,8 +86,8 @@ class Game:
         top_score_rect = top_score_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 50))
         restart_text = self.font_score.render("Press any key to restart", True, (200, 200, 200))
         restart_rect = restart_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 2 + 100))
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(game_over_text, game_over_rect)
+        self.screen.fill((0, 0, 0)) #erases everything on screen puts back a black screen
+        self.screen.blit(game_over_text, game_over_rect) #and then the next 4 commands define the final screen look
         self.screen.blit(score_text, score_rect)
         self.screen.blit(top_score_text, top_score_rect)
         self.screen.blit(restart_text, restart_rect)
@@ -130,13 +131,13 @@ class Game:
                     player.gravity = self.gravity
                     player.update()
 
-                    if player_x <= 0:
+                    if player_x <= 0: #stops the game if players goes over left side of screen
                         self.lives = 0
                         running = False
 
-                    player_x = max(0, min(player_x, WINDOWWIDTH - player.width))
+                    player_x = max(0, min(player_x, WINDOWWIDTH - player.width)) # forces the player to stay in in the window
 
-                    bg_x1, bg_x2 = update_background(bg_x1, bg_x2, self.background.get_width(), self.scroll_speed)
+                    bg_x1, bg_x2 = update_background(bg_x1, bg_x2, self.background.get_width(), self.scroll_speed) # updates the background axis
 
                     self.screen.blit(self.background, (bg_x1, 0))
                     self.screen.blit(self.background, (bg_x2, 0))
@@ -181,19 +182,13 @@ class Game:
                     self.gameOverSound.stop()
                     break
 
-
-if __name__ == "__main__":
+#this loop was adviced and created by chat gpt
+if __name__ == "__main__": #defines where the programm starts
     game = Game()
-    game.run()
+    game.run()  #starts the game
 
-
-
-
-    
-     
-
-
-
+#Sources :
+#Code : https://chatgpt.com
 #Background : https://fr.vecteezy.com/art-vectoriel/4277175-foret-jeu-fond
 #Bee : https://pixabay.com/gifs/wasp-hornet-insect-fly-pixel-art-12292/
 #Player : https://www.gifsanimes.com/img-course-a-pied-image-animee-0008-60786.htm

@@ -1,4 +1,3 @@
-# stone.py
 import pygame, random
 
 class Stone:
@@ -9,7 +8,7 @@ class Stone:
         self.width = width
         self.height = height
         self.image = pygame.transform.scale(image, (width, height))
-        self.mask = pygame.mask.from_surface(self.image)  # Collision mask
+        self.mask = pygame.mask.from_surface(self.image)  
 
     def update(self, scroll_speed, screen_width, min_distance):
         # Updates the stone's position
@@ -31,7 +30,7 @@ class Stone:
         screen.blit(self.image, (self.x, self.y))
 
     def detect_collision(self, player_x, player_y, player):
-        # Checks for precise collision between player and stone
+        # Checks for collision between player and stone
         offset_x = self.x - player_x
         offset_y = self.y - player_y
         return player.mask.overlap(self.mask, (offset_x, offset_y))
