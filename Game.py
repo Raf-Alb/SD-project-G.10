@@ -62,10 +62,16 @@ class Game:
         self.screen.blit(self.background, (0, 0))
         text_surface1 = self.font_large.render("Bee Running", True, (0, 40, 0))
         text_surface2 = self.font_large.render("Press any key to start", True, (0, 40, 0))
+        smaller_font = pygame.font.SysFont("courier new", 24)
+        instructions_text = smaller_font.render("Jump with SPACE and move with the arrows or WASD", True, (200,200, 200))
+    
         text_rect1 = text_surface1.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3))
         text_rect2 = text_surface2.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3 + 50))
+        instructions_rect = instructions_text.get_rect(center=(WINDOWWIDTH // 2, WINDOWHEIGHT // 3 + 360))
+    
         self.screen.blit(text_surface1, text_rect1)
         self.screen.blit(text_surface2, text_rect2)
+        self.screen.blit(instructions_text, instructions_rect)
         pygame.display.update()
         self.wait_for_key()
 
